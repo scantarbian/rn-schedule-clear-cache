@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
-import { StyleSheet, View, Text } from 'react-native';
-import { getCacheSize } from 'rn-schedule-clear-cache';
+import { StyleSheet, View, Text, Pressable } from 'react-native';
+import { getCacheSize, clearCache } from 'rn-schedule-clear-cache';
 
 export default function App() {
   const [cacheSize, setCacheSize] = useState<string | null>(null);
@@ -9,9 +9,51 @@ export default function App() {
     getCacheSize().then(setCacheSize).catch(console.error);
   }, []);
 
+  const updateCacheSize = async () => {
+    return getCacheSize().then(setCacheSize).catch(console.error);
+  };
+
+  const clear = async () => {
+    return await clearCache().then(() => {
+      getCacheSize().then(setCacheSize).catch(console.error);
+    });
+  };
+
   return (
     <View style={styles.container}>
       <Text>Size: {cacheSize}</Text>
+      <Pressable
+        style={{
+          backgroundColor: 'green',
+          padding: 10,
+          width: '40%',
+        }}
+        onPress={updateCacheSize}
+      >
+        <Text
+          style={{
+            textAlign: 'center',
+          }}
+        >
+          Update
+        </Text>
+      </Pressable>
+      <Pressable
+        style={{
+          backgroundColor: 'red',
+          padding: 10,
+          width: '40%',
+        }}
+        onPress={clear}
+      >
+        <Text
+          style={{
+            textAlign: 'center',
+          }}
+        >
+          Clear cache
+        </Text>
+      </Pressable>
     </View>
   );
 }
@@ -21,6 +63,7 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
+    rowGap: 20,
   },
   box: {
     width: 60,
