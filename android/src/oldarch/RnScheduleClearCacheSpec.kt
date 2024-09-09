@@ -10,4 +10,6 @@ abstract class RnScheduleClearCacheSpec internal constructor(context: ReactAppli
   abstract fun clearCache(promise: Promise)
 
   abstract fun getCacheSize(promise: Promise)
+
+  abstract fun scheduleClearCache(promise: Promise)
 }
