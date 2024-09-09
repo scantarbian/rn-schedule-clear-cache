@@ -24,6 +24,20 @@ const RnScheduleClearCache = RnScheduleClearCacheModule
       }
     );
 
-export function multiply(a: number, b: number): Promise<number> {
-  return RnScheduleClearCache.multiply(a, b);
+export function clearCache(): Promise<void> {
+  return RnScheduleClearCache.clearCache();
+}
+
+/**
+ * Schedules the clearing of cache based on the provided cron expression.
+ *
+ * @param cron - The cron expression specifying when to clear the cache.
+ * @returns A promise that resolves when schedule is
+ */
+export function scheduleClearCache(cron: string): Promise<void> {
+  return RnScheduleClearCache.scheduleClearCache(cron);
+}
+
+export function getCacheSize(): Promise<string> {
+  return RnScheduleClearCache.getCacheSize();
 }
