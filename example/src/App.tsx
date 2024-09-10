@@ -4,7 +4,8 @@ import {
   getCacheSize,
   clearCache,
   scheduleClearCache,
-  checkNextScheduledClearCache,
+  getTimeUntilNext,
+  test,
 } from 'rn-schedule-clear-cache';
 
 export default function App() {
@@ -25,7 +26,8 @@ export default function App() {
   };
 
   const check = async () => {
-    await checkNextScheduledClearCache()
+    await test().then(console.log).catch(console.error);
+    await getTimeUntilNext()
       .then((time) => {
         console.log(time);
       })

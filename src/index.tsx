@@ -25,20 +25,45 @@ const RnScheduleClearCache = RnScheduleClearCacheModule
     );
 
 export function clearCache(): Promise<void> {
-  return RnScheduleClearCache.clearCache();
+  try {
+    return RnScheduleClearCache.clearCache();
+  } catch (e) {
+    return Promise.reject(e);
+  }
 }
 
 /**
  * Schedules the clearing of cache every 7 days at 3:00 AM.
  */
 export function scheduleClearCache(): Promise<void> {
-  return RnScheduleClearCache.scheduleClearCache();
+  try {
+    return RnScheduleClearCache.scheduleClearCache();
+  } catch (e) {
+    return Promise.reject(e);
+  }
 }
 
 export function getCacheSize(): Promise<string> {
-  return RnScheduleClearCache.getCacheSize();
+  try {
+    return RnScheduleClearCache.getCacheSize();
+  } catch (e) {
+    return Promise.reject(e);
+  }
 }
 
-export function checkNextScheduledClearCache(): Promise<number> {
-  return RnScheduleClearCache.checkNextScheduledClearCache();
+export function getTimeUntilNext(): Promise<number> {
+  try {
+    return RnScheduleClearCache.getTimeUntilNext();
+  } catch (e) {
+    return Promise.reject(e);
+  }
+}
+
+export function test(): Promise<string> {
+  try {
+    console.log(RnScheduleClearCache);
+    return RnScheduleClearCache.test();
+  } catch (e) {
+    return Promise.reject(e);
+  }
 }

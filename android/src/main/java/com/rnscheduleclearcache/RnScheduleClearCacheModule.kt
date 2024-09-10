@@ -187,7 +187,7 @@ class RnScheduleClearCacheModule internal constructor(context: ReactApplicationC
     }
   }
 
-  override fun checkNextScheduledClearCache(promise: Promise) {
+  override fun getTimeUntilNext(promise: Promise) {
     try {
       if (alarmManager === null) {
         promise.reject("ERR_NO_ALARM_MANAGER", "AlarmManager is null")
@@ -208,6 +208,10 @@ class RnScheduleClearCacheModule internal constructor(context: ReactApplicationC
       promise.reject("ERR_UNEXPECTED_EXCEPTION", e)
       return
     }
+  }
+
+  override fun test(promise: Promise) {
+    promise.resolve("yay")
   }
 
   companion object {
