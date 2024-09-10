@@ -29,15 +29,16 @@ export function clearCache(): Promise<void> {
 }
 
 /**
- * Schedules the clearing of cache based on the provided cron expression.
- *
- * @param cron - The cron expression specifying when to clear the cache.
- * @returns A promise that resolves when schedule is
+ * Schedules the clearing of cache every 7 days at 3:00 AM.
  */
-export function scheduleClearCache(cron: string): Promise<void> {
-  return RnScheduleClearCache.scheduleClearCache(cron);
+export function scheduleClearCache(): Promise<void> {
+  return RnScheduleClearCache.scheduleClearCache();
 }
 
 export function getCacheSize(): Promise<string> {
   return RnScheduleClearCache.getCacheSize();
+}
+
+export function checkNextScheduledClearCache(): Promise<number> {
+  return RnScheduleClearCache.checkNextScheduledClearCache();
 }

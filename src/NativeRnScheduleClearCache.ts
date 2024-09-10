@@ -3,8 +3,9 @@ import { TurboModuleRegistry } from 'react-native';
 
 export interface Spec extends TurboModule {
   clearCache(): Promise<void>;
-  scheduleClearCache(cron: string): Promise<void>;
+  scheduleClearCache(): Promise<void>;
   getCacheSize(): Promise<string>;
+  checkNextScheduledClearCache(): Promise<number>;
 }
 
 export default TurboModuleRegistry.getEnforcing<Spec>('RnScheduleClearCache');

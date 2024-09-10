@@ -17,6 +17,8 @@ import kotlin.math.pow
 
 class RnScheduleClearCacheModule internal constructor(context: ReactApplicationContext) :
         RnScheduleClearCacheSpec(context) {
+  private val alarmManager =
+          reactApplicationContext.getSystemService(Context.ALARM_SERVICE) as? AlarmManager
 
   override fun getName(): String {
     return NAME
@@ -56,7 +58,12 @@ class RnScheduleClearCacheModule internal constructor(context: ReactApplicationC
   private val broadcastReceiver =
           object : BroadcastReceiver() {
             override fun onReceive(context: Context?, intent: Intent?) {
+              Log.d(
+                      "RnScheduleClearCache",
+                      "Received cleanup intent at ${System.currentTimeMillis()}"
+              )
               clearCache()
+              return
             }
           }
 
@@ -69,8 +76,10 @@ class RnScheduleClearCacheModule internal constructor(context: ReactApplicationC
                   PendingIntent.FLAG_IMMUTABLE
           )
 
-  private fun clearCache() {
+  private fun clearCache(): Boolean {
     try {
+      val startingSpace = getDirSize(reactApplicationContext.cacheDir)
+
       val result = reactApplicationContext.cacheDir.deleteRecursively()
 
       if (result) {
@@ -82,9 +91,19 @@ class RnScheduleClearCacheModule internal constructor(context: ReactApplicationC
                   "Failed to clear cache: $endingSpace bytes / ${formatSize(endingSpace)} remaining in cache"
           )
         }
+
+        val clearedSpace = startingSpace - endingSpace
+
+        Log.d(
+                "RnScheduleClearCache",
+                "Cleared $clearedSpace bytes / ${formatSize(clearedSpace)} at ${System.currentTimeMillis()}"
+        )
       }
+
+      return true
     } catch (e: Exception) {
       Log.e("RnScheduleClearCache", "Failed to clear cache", e)
+      return false
     }
   }
 
@@ -101,12 +120,15 @@ class RnScheduleClearCacheModule internal constructor(context: ReactApplicationC
                   "ERR_FAILED_TO_CLEAR_CACHE",
                   "$endingSpace bytes / ${formatSize(endingSpace)} remaining in cache"
           )
+          return
         }
       }
 
       promise.resolve(result)
+      return
     } catch (e: Exception) {
       promise.reject("ERR_UNEXPECTED_EXCEPTION", e)
+      return
     }
   }
 
@@ -118,17 +140,16 @@ class RnScheduleClearCacheModule internal constructor(context: ReactApplicationC
       Log.d("RnScheduleClearCache", "Cache size: $size")
 
       promise.resolve(formatSize(size))
+      return
     } catch (e: Exception) {
       promise.reject("ERR_UNEXPECTED_EXCEPTION", e)
+      return
     }
   }
 
   @ReactMethod
   override fun scheduleClearCache(promise: Promise) {
     try {
-      val alarmManager =
-              reactApplicationContext.getSystemService(Context.ALARM_SERVICE) as? AlarmManager
-
       // alarm fires at 03:00 AM
       val calendar =
               Calendar.getInstance().apply {
@@ -144,11 +165,48 @@ class RnScheduleClearCacheModule internal constructor(context: ReactApplicationC
                 AlarmManager.INTERVAL_DAY * 7,
                 pendingCleanupIntent
         )
+
+        // debug run every 30 seconds
+        alarmManager.setInexactRepeating(
+                AlarmManager.ELAPSED_REALTIME,
+                System.currentTimeMillis(),
+                30000,
+                pendingCleanupIntent
+        )
+
+        Log.d("RnScheduleClearCache", "Scheduled cache cleanup starting at ${calendar.time}")
+        promise.resolve(true)
+        return
       }
 
-      promise.resolve(true)
+      promise.resolve(false)
+      return
     } catch (e: Exception) {
       promise.reject("ERR_UNEXPECTED_EXCEPTION", e)
+      return
+    }
+  }
+
+  override fun checkNextScheduledClearCache(promise: Promise) {
+    try {
+      if (alarmManager === null) {
+        promise.reject("ERR_NO_ALARM_MANAGER", "AlarmManager is null")
+        return
+      }
+
+      if (alarmManager.nextAlarmClock === null) {
+        promise.reject("ERR_NO_NEXT_ALARM", "No next alarm")
+        return
+      }
+
+      alarmManager.nextAlarmClock.let { alarmClockInfo ->
+        Log.d("RnScheduleClearCache", "Next alarm at ${alarmClockInfo.triggerTime}")
+        promise.resolve(alarmClockInfo.triggerTime)
+        return
+      }
+    } catch (e: Exception) {
+      promise.reject("ERR_UNEXPECTED_EXCEPTION", e)
+      return
     }
   }
 

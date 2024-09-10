@@ -1,6 +1,11 @@
 import { useEffect, useState } from 'react';
 import { StyleSheet, View, Text, Pressable } from 'react-native';
-import { getCacheSize, clearCache } from 'rn-schedule-clear-cache';
+import {
+  getCacheSize,
+  clearCache,
+  scheduleClearCache,
+  checkNextScheduledClearCache,
+} from 'rn-schedule-clear-cache';
 
 export default function App() {
   const [cacheSize, setCacheSize] = useState<string | null>(null);
@@ -17,6 +22,14 @@ export default function App() {
     return await clearCache().then(() => {
       getCacheSize().then(setCacheSize).catch(console.error);
     });
+  };
+
+  const check = async () => {
+    await checkNextScheduledClearCache()
+      .then((time) => {
+        console.log(time);
+      })
+      .catch(console.error);
   };
 
   return (
@@ -40,6 +53,22 @@ export default function App() {
       </Pressable>
       <Pressable
         style={{
+          backgroundColor: 'green',
+          padding: 10,
+          width: '40%',
+        }}
+        onPress={check}
+      >
+        <Text
+          style={{
+            textAlign: 'center',
+          }}
+        >
+          Check next scheduled clear cache
+        </Text>
+      </Pressable>
+      <Pressable
+        style={{
           backgroundColor: 'red',
           padding: 10,
           width: '40%',
@@ -52,6 +81,22 @@ export default function App() {
           }}
         >
           Clear cache
+        </Text>
+      </Pressable>
+      <Pressable
+        style={{
+          backgroundColor: 'red',
+          padding: 10,
+          width: '40%',
+        }}
+        onPress={scheduleClearCache}
+      >
+        <Text
+          style={{
+            textAlign: 'center',
+          }}
+        >
+          Schedule clear cache
         </Text>
       </Pressable>
     </View>
