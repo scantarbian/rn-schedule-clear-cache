@@ -58,12 +58,3 @@ export function getTimeUntilNext(): Promise<number> {
     return Promise.reject(e);
   }
 }
-
-export function test(): Promise<string> {
-  try {
-    console.log(RnScheduleClearCache);
-    return RnScheduleClearCache.test();
-  } catch (e) {
-    return Promise.reject(e);
-  }
-}

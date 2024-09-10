@@ -1,11 +1,14 @@
 package com.rnscheduleclearcache
 
+import android.annotation.SuppressLint
 import android.app.AlarmManager
 import android.app.PendingIntent
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import android.os.PowerManager
 import android.util.Log
+import androidx.core.content.ContextCompat.startActivity
 import com.facebook.react.bridge.Promise
 import com.facebook.react.bridge.ReactApplicationContext
 import com.facebook.react.bridge.ReactMethod
@@ -107,6 +110,18 @@ class RnScheduleClearCacheModule internal constructor(context: ReactApplicationC
     }
   }
 
+  private fun ignoreBatteryOptimization() {
+    val intent = Intent()
+    val packageName = reactApplicationContext.packageName
+    val powerManager = reactApplicationContext.getSystemService(Context.POWER_SERVICE) as PowerManager
+
+    if (!powerManager.isIgnoringBatteryOptimizations(packageName)) {
+      intent.action = android.provider.Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS
+      intent.data = android.net.Uri.parse("package:$packageName")
+      intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
+      startActivity(reactApplicationContext, intent, null)
+    }
+  }
   @ReactMethod
   override fun clearCache(promise: Promise) {
     try {
@@ -150,6 +165,13 @@ class RnScheduleClearCacheModule internal constructor(context: ReactApplicationC
   @ReactMethod
   override fun scheduleClearCache(promise: Promise) {
     try {
+      if (alarmManager === null) {
+        promise.reject("ERR_NO_ALARM_MANAGER", "AlarmManager is null")
+        return
+      }
+
+      ignoreBatteryOptimization()
+
       // alarm fires at 03:00 AM
       val calendar =
               Calendar.getInstance().apply {
@@ -157,29 +179,24 @@ class RnScheduleClearCacheModule internal constructor(context: ReactApplicationC
                 set(Calendar.HOUR_OF_DAY, 3)
               }
 
-      if (alarmManager !== null) {
-        // run clear cache every 7 days
-        alarmManager.setInexactRepeating(
-                AlarmManager.ELAPSED_REALTIME,
-                calendar.timeInMillis,
-                AlarmManager.INTERVAL_DAY * 7,
-                pendingCleanupIntent
-        )
+      // run clear cache every 7 days
+      alarmManager.setInexactRepeating(
+              AlarmManager.ELAPSED_REALTIME,
+              calendar.timeInMillis,
+              AlarmManager.INTERVAL_DAY * 7,
+              pendingCleanupIntent
+      )
 
-        // debug run every 30 seconds
-        alarmManager.setInexactRepeating(
-                AlarmManager.ELAPSED_REALTIME,
-                System.currentTimeMillis(),
-                30000,
-                pendingCleanupIntent
-        )
+      // debug run every 30 seconds
+      alarmManager.setInexactRepeating(
+              AlarmManager.ELAPSED_REALTIME,
+              System.currentTimeMillis(),
+              30000,
+              pendingCleanupIntent
+      )
 
-        Log.d("RnScheduleClearCache", "Scheduled cache cleanup starting at ${calendar.time}")
-        promise.resolve(true)
-        return
-      }
-
-      promise.resolve(false)
+      Log.d("RnScheduleClearCache", "Scheduled cache cleanup starting at ${calendar.time}")
+      promise.resolve(true)
       return
     } catch (e: Exception) {
       promise.reject("ERR_UNEXPECTED_EXCEPTION", e)
@@ -187,6 +204,7 @@ class RnScheduleClearCacheModule internal constructor(context: ReactApplicationC
     }
   }
 
+  @ReactMethod
   override fun getTimeUntilNext(promise: Promise) {
     try {
       if (alarmManager === null) {
@@ -198,20 +216,10 @@ class RnScheduleClearCacheModule internal constructor(context: ReactApplicationC
         promise.reject("ERR_NO_NEXT_ALARM", "No next alarm")
         return
       }
-
-      alarmManager.nextAlarmClock.let { alarmClockInfo ->
-        Log.d("RnScheduleClearCache", "Next alarm at ${alarmClockInfo.triggerTime}")
-        promise.resolve(alarmClockInfo.triggerTime)
-        return
-      }
     } catch (e: Exception) {
       promise.reject("ERR_UNEXPECTED_EXCEPTION", e)
       return
     }
-  }
-
-  override fun test(promise: Promise) {
-    promise.resolve("yay")
   }
 
   companion object {

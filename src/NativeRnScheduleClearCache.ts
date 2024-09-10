@@ -6,7 +6,6 @@ export interface Spec extends TurboModule {
   scheduleClearCache(): Promise<void>;
   getCacheSize(): Promise<string>;
   getTimeUntilNext(): Promise<number>;
-  test(): Promise<string>;
 }
 
 export default TurboModuleRegistry.getEnforcing<Spec>('RnScheduleClearCache');
